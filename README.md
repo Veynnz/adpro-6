@@ -39,3 +39,16 @@
     - If i want to create more pages, i would only need to modify the `if` block.
 
     ![Commit 3 screen capture](/public/images/commit3.png)
+
+## Commit 4 Reflection notes
+
+- Why the browser take some time to load
+    - A request to `/sleep` takes longer because of:
+        ```rust
+        thread::sleep(Duration::from_secs(10));
+        ```
+        - When the browser requests `/sleep`, the server pauses for 10 seconds before responding.
+    - If the browser requests `/` first, it loads quickly.
+    However, if `/sleep` is requested first, the `/` request must wait until `/sleep` is finished.
+        - This happens because the server runs on a single thread, processing one request at a time.
+        -  As a result, the next request cannot be handled until the previous one is completed.
