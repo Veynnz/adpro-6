@@ -22,3 +22,20 @@
     - Sends the response as bytes (`.as_bytes()`) to the client using `stream.write_all()`, and forces the program to crash if there's an error using `.unwrap()`.
 
     ![Commit 2 screen capture](/public/images/commit2.png)
+
+## Commit 3 Reflection notes
+
+- How to split between responses
+    - The HTTP request lines are being read just like before.
+    - `.next()` in `request_line` takes only the first line, which contains the request method and path.
+    - I made another html file, `404.html`, that handles every bad requests.
+        - If the HTTP request is sent to `/`, it returns as a success (status code: 200), and loads `hello.html`.
+        - If the HTTP request is anything else (not `/`), it returns as a failure (status code: 404), and loads `404.html`.
+
+- Why refactoring is needed
+    - Both conditions (`if` and `else`) basically contain the same steps, with the only difference being the returned `file name` and `status code`.
+    - Duplicated logic would make the program seem messy and harder to maintain.
+    - The refactored version eliminates the duplication and makes the code cleaner and more maintainable.
+    - If i want to create more pages, i would only need to modify the `if` block.
+
+    ![Commit 3 screen capture](/public/images/commit3.png)
