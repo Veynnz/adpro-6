@@ -52,3 +52,76 @@
     However, if `/sleep` is requested first, the `/` request must wait until `/sleep` is finished.
         - This happens because the server runs on a single thread, processing one request at a time.
         -  As a result, the next request cannot be handled until the previous one is completed.
+
+## Commit 5 Reflection notes
+
+- Creating the ThreadPool
+    - A fixed number of `worker threads` is created (in this case 4).
+    - A message queue (`channel`) is set up to send tasks (`jobs`).
+    - A shared queue (`Arc<Mutex<Receiver<Job>>`) allows `workers` to safely access `jobs`.
+
+    ```rust
+        pub fn new(size: usize) -> ThreadPool {
+        assert!(size > 0);
+
+        let (sender, receiver) = mpsc::channel();
+
+        let receiver = Arc::new(Mutex::new(receiver));
+
+        let mut workers = Vec::with_capacity(size);
+
+        for id in 0..size {
+            workers.push(Worker::new(id, Arc::clone(&receiver)));
+        }
+
+        ThreadPool { workers, sender }
+    }
+
+    ...
+
+    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
+    ...
+    ```
+
+- Executing `jobs`
+    - The `job` (a function) is wrapped in a Box and sent to the queue.
+    - `Workers` pick up `jobs` from the queue when they are free.
+
+    ```rust
+    pub fn execute<F>(&self, f: F)
+    where
+        F: FnOnce() + Send + 'static,
+    {
+        let job = Box::new(f);
+
+        self.sender.send(job).unwrap();
+    }
+    ```
+
+- Worker Threads (Worker::new)
+    - Each worker is a separate thread that continuously:
+        - Waits for a job in the queue.
+        - Locks the queue and takes the next available job.
+        - Executes the job.
+        - Repeats the process.
+
+    ```rust
+    struct Worker {
+    id: usize,
+    thread: thread::JoinHandle<()>,
+    }
+
+    impl Worker {
+        fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
+            let thread = thread::spawn(move || loop {
+                let job = receiver.lock().unwrap().recv().unwrap();
+
+                println!("Worker {id} got a job; executing.");
+
+                job();
+            });
+
+            Worker { id, thread }
+        }
+    }
+    ```
