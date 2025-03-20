@@ -125,3 +125,10 @@
         }
     }
     ```
+
+## Commit Bonus Reflection notes
+
+Pada bagian ini, hanya diubah approach pembuatan ThreadPool, dari `new` menjadi `build`. 
+- Metode `new()` biasa digunakan untuk membuat objek yang selalu berhasil tanpa kemungkinan gagal. Jika ada kondisi yang tidak valid, seperti ukuran `ThreadPool` yang nol, biasanya digunakan `panic!` untuk menghentikan program. Ini sesuai dengan konvensi `Rust`, di mana `new()` diasumsikan aman digunakan tanpa perlu penanganan kesalahan tambahan.
+
+- Sebaliknya, metode `build()` lebih cocok jika ada kemungkinan kesalahan yang perlu ditangani. Dibandingkan menyebabkan crash dengan panic!, `build()` dapat mengembalikan `Result<T, E>` sehingga pemanggilnya bisa menangani kesalahan dengan lebih baik. Dalam kasus `ThreadPool`, penggunaan `build()` lebih disarankan karena memungkinkan validasi yang lebih fleksibel tanpa menghentikan program secara tiba-tiba.
